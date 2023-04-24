@@ -2,7 +2,7 @@ import {Container, TextField, Typography, Button, TextareaAutosize} from "@mui/m
 import {Box} from "@mui/system";
 import React, {useState} from "react";
 import {makeStyles} from '@mui/styles';
-import getColumnInfo from './getColumnInfo';
+import GetColumnInfo from './GetColumnInfo';
 
 const useStyles = makeStyles({
     container: {
@@ -37,7 +37,7 @@ const SelectModal2 = ({progWorkFlowMng}) => {
         progWorkFlowMng.flowAttr.sql = attr
         progWorkFlowMng.flowDesc = attr
         // flow_attr.sql = attr
-        progWorkFlowMng.flowAttr.column_info =getColumnInfo(attr);
+        progWorkFlowMng.flowAttr.column_info =GetColumnInfo(attr);
         // flow_attr.column_info = getColumnInfo(attr);
         console.log("submit");
     };

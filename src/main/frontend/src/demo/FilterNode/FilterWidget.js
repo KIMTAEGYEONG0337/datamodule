@@ -1,4 +1,4 @@
-import React, {FC, useState} from "react";
+import React, {FC, useState, useEffect} from "react";
 import { DiagramEngine } from "@projectstorm/react-diagrams";
 import {FilterNode} from "./FilterNode";
 
@@ -8,6 +8,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import ModalPortal from "../MPodal/ModalPortal";
 import FilterModal from "./FilterModal";
 import FilterModal2 from "./FilterModal2";
+import GetFilteredData from "./GetFilteredData";
 import * as S from "../../adstyled";
 import "../../styles.css";
 
@@ -18,9 +19,27 @@ export interface FilterNodeWidgetProps {
 
 const FilterNodeWidget : FC<FilterNodeWidgetProps> = ({engine, node}) => {
 
+    const initTable = Object.keys(node.dummy[0]);
+
     const [modalOpened, setModalOpened] = useState(false);
+    const [fieldStates, setFieldStates] = useState(null);
+    const [tableField, setTableField] = useState(initTable);
 
     node.refresh();
+    // console.log(fieldStates);
+
+    useEffect(() => {
+        if(node.dummy) {
+            setTableField(Object.keys(node.dummy[0]));
+        }
+    }, [node.dummy]);
+
+    useEffect(() => {
+        if(fieldStates) {
+            node.filteredData = GetFilteredData(node.dummy, fieldStates);
+            console.log(node.filteredData);
+        }
+    }, [fieldStates]);
 
     const handleOpen = () => {
         setModalOpened(true);
@@ -28,6 +47,10 @@ const FilterNodeWidget : FC<FilterNodeWidgetProps> = ({engine, node}) => {
 
     const handleClose = () => {
         setModalOpened(false);
+    };
+
+    const handleFieldStatesUpdate = (updatedFieldStates) => {
+        setFieldStates(updatedFieldStates);
     };
 
     return (
@@ -48,7 +71,12 @@ const FilterNodeWidget : FC<FilterNodeWidgetProps> = ({engine, node}) => {
                     <IconButton onClick={handleOpen}><SettingsIcon /></IconButton>
                     {modalOpened && (
                         <ModalPortal closePortal={handleClose} flag={"filter"}>
-                            <FilterModal2 dataSet={node.dataSet}/>
+                            <FilterModal2
+                                dataSet={node.dataSet}
+                                onFieldStatesUpdate={handleFieldStatesUpdate}
+                                savedFieldStates = {fieldStates}
+                                tableField = {tableField}
+                            />
                         </ModalPortal>
                     )}
                 </Container>

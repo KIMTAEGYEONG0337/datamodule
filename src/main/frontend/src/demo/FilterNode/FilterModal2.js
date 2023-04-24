@@ -16,45 +16,62 @@ import {
     FormControlLabel,
 } from "@mui/material";
 import { Box } from "@mui/system";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const FilterModal2 = ({ dataSet }) => {
-    const fields = ["LOG_DATE", "LOG_TIME", "LOG_USER_ID", "LOG_PAY_ACC"];
-    // >> node.flow_attr.column_info
+const FilterModal2 = ({ dataSet, onFieldStatesUpdate, savedFieldStates, tableField }) => {
+    // const tableField = ["LOG_DATE", "LOG_TIME", "LOG_USER_ID", "LOG_PAY_ACC"];
     const conditions = [">", "<", ">=", "<=", "=", "LIKE", "IN", "NOT LIKE"];
 
-    const initialFieldState = fields.reduce((acc, field) => {
-        acc[field] = { condition: "", filterValue: "", memo: "" };
-        return acc;
-    }, {});
-
     const [selectedField, setSelectedField] = useState("");
-    const [selectedCondition, setSelectedCondition] = useState("");
+    const [condition, setCondition] = useState("");
     const [filterValue, setFilterValue] = useState("");
     const [memo, setMemo] = useState("");
     const [highlightedRowIndex, setHighlightedRowIndex] = useState(null);
-    const [fieldStates, setFieldStates] = useState(initialFieldState);
+    const [fieldStates, setFieldStates] = useState(null);
     const [orFilter, setOrFilter] = useState(false);
 
+    useEffect(() => {
+        if (savedFieldStates) {
+            setFieldStates(savedFieldStates);
+            console.log("saved");
+        } else {
+            console.log("non-saved");
+            const initialFieldState = tableField.reduce((acc, field) => {
+                acc[field] = { condition: "", filterValue: "", memo: "" };
+                return acc;
+            }, {});
+            initialFieldState.orFilter = false;
+            setFieldStates(initialFieldState);
+        }
+    }, [savedFieldStates]);
+
     const handleOrFilterChange = (event) => {
+        const updatedFieldStates = {
+            ...fieldStates,
+            orFilter: event.target.checked
+        };
+        setFieldStates(updatedFieldStates);
         setOrFilter(event.target.checked);
     };
 
     const handleSave = () => {
-        setFieldStates({
+        const updatedFieldStates = {
             ...fieldStates,
             [selectedField]: {
-                condition: selectedCondition,
+                condition,
                 filterValue,
                 memo,
+                orFilter
             },
-        });
+        };
+        setFieldStates(updatedFieldStates);
+        onFieldStatesUpdate(updatedFieldStates);
         alert("저장되었습니다.");
     };
 
     const handleReset = () => {
         setSelectedField("");
-        setSelectedCondition("");
+        setCondition("");
         setFilterValue("");
         setMemo("");
     };
@@ -62,6 +79,10 @@ const FilterModal2 = ({ dataSet }) => {
     const handleRowClick = (index) => {
         setHighlightedRowIndex(index);
     };
+
+    if (!fieldStates) {
+        return null;
+    }
 
     return (
         <Container>
@@ -76,7 +97,7 @@ const FilterModal2 = ({ dataSet }) => {
                                     value={selectedField}
                                     onChange={(e) => setSelectedField(e.target.value)}
                                 >
-                                    {fields.map((field) => (
+                                    {tableField.map((field) => (
                                         <MenuItem key={field} value={field}>
                                             {field}
                                         </MenuItem>
@@ -86,8 +107,8 @@ const FilterModal2 = ({ dataSet }) => {
                             <Grid item xs={4}>
                                 <Select
                                     fullWidth
-                                    value={selectedCondition}
-                                    onChange={(e) => setSelectedCondition(e.target.value)}
+                                    value={condition}
+                                    onChange={(e) => setCondition(e.target.value)}
                                 >
                                     {conditions.map((condition) => (
                                         <MenuItem key={condition} value={condition}>
@@ -120,11 +141,6 @@ const FilterModal2 = ({ dataSet }) => {
                             초기화
                         </Button>
                     </Grid>
-                    <Grid item>
-                        <Button variant="contained" onClick={handleSave}>
-                            저장
-                        </Button>
-                    </Grid>
                 </Grid>
             </Grid>
             <TableContainer
@@ -141,12 +157,12 @@ const FilterModal2 = ({ dataSet }) => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {fields.map((field, index) => (
+                        {tableField.map((field, index) => (
                             <TableRow
                                 key={field}
                                 onClick={() => {
                                     setSelectedField(field);
-                                    setSelectedCondition(fieldStates[field].condition);
+                                    setCondition(fieldStates[field].condition);
                                     setFilterValue(fieldStates[field].filterValue);
                                     setMemo(fieldStates[field].memo);
                                     handleRowClick(index);
@@ -179,7 +195,7 @@ const FilterModal2 = ({ dataSet }) => {
                     />
                 </Grid>
                 <Grid item>
-                    <Button variant="contained">
+                    <Button variant="contained" onClick={handleSave}>
                         저장
                     </Button>
                 </Grid>
